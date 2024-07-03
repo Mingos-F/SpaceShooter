@@ -23,8 +23,8 @@ FetchContent_Declare(ImGui-SFML
     GIT_TAG 2.6.x)
 FetchContent_MakeAvailable(ImGui-SFML)
 
-# Find all .cpp files in the src directory
-file(GLOB SOURCES "src/*.cpp")
+# Find all .cpp files in the src directory (this actually works)
+file(GLOB_RECURSE SOURCES "src/*.cpp")
 
 add_executable(main ${SOURCES})
 target_link_libraries(main PRIVATE sfml-graphics ImGui-SFML::ImGui-SFML)
