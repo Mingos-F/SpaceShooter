@@ -1,0 +1,94 @@
+##SpaceShooter##
+
+Specification:
+
+Player:
+the player is represented by a shape in the config file
+
+the player must spawn in the center of the screen at the beginning od the game, and after it dies.
+
+the player moves by a speed read from the config file in these directions: up down left right with the keys w a s d
+
+the player is confined to move only withing the bounds of the screen
+
+the player will shoot a bullet towards the mouse pointer when the left mouse button is clicked, the speed size and lifespan are read from the config file  
+
+Special ability:
+come up with a move that is fired when the right mouse button is clicked
+
+it must spawn multiple entities like bullets etc
+entities have an unique graphic associated with them
+a new game mechanic is introduced
+a cooldown timer for the special ability
+
+Enemies:
+they will spawn in a random location on the screen every X frames and X is in the config file
+
+enemies must not overlap the sides of the screen at the time of spawn
+
+they have a random number of vertices between a given minimum and maximum specified in the config file.
+
+when an enemy reaches the edge of the window it should bounce of it in the opposite direction at the same speed.
+
+when large enemy collides with a bullet ot player they are destroyed and N small enemies spawn in its place where N is the number of vertices of the original enemy each small enemy must have the same number of vertices and color of the original, these small entities travel outward at angles at a fixed intervals equal to 360/vertices
+
+Score:
+each time and enemy spawns it is given a score component of N*100 where n is the number of sides, small enemies give double this value
+
+if a player bullet kills an enemy the game score is increased by the score component of the enemy killed
+
+the score should be displayed with the font from the config file and is located in the top left corner
+
+Drawing:
+
+in the render system all entities should be given a slow rotation
+
+any entity with a lifespan is currently alive shout have its color alpha channel set to a ratio depending on how long it has left to live
+example if an entity has a 80 frame life span and 25 frames remaining then the alpha value is (float)25/80*255. the alpha should go from 255 when it is first spawned to o in the las frame. 
+
+GUI:
+must display options to turn of each system independently
+For each entity in the game the gui must list th id, tag position. you must display a list of all entities as well as list of entities by their tag. you must also have some way of destroying a given entity by interacting with the ui elements associated with it
+
+you must be able to change the enemy spawn interval
+
+you must be able to manually spawn enemies in some way
+
+
+Misc:
+p key to pause
+esc key to close the game
+
+Config File:
+
+Window Width Height FrameLimit FullScreen
+
+Font File Size R G B
+
+Player SR CR S FR FG FB OR OG OB OT V
+    shape radius SR int
+    collision radius CR int
+    speed S float
+    fill color FR FG FB int
+    outline color OR OG OB int
+    outline tightness OT int
+    shape vertices V int
+
+Enemy SR CR SMIN SMAX OR OG OB OT VMIN VMAX L SI
+    shape radius SR int
+    collision radius CR int
+    min/max speed SMIN SMAX float
+    outline color OR OG OB int
+    outline tightness OT int
+    min/max vertices VMIN VMAX int
+    small lifespan L int
+    spawn interval SP int
+
+Bullet  SR CR S FR FG FB OR RG RB OT V L
+    shape radius SR int
+    collision radius CR int
+    speed S float
+    fill color FR FG FB int
+    outline color OR OG OB int
+    shape vertices V int
+    lifespan L int
