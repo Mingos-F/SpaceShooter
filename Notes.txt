@@ -84,7 +84,7 @@ Enemy SR CR SMIN SMAX OR OG OB OT VMIN VMAX L SI
     small lifespan L int
     spawn interval SP int
 
-Bullet  SR CR S FR FG FB OR RG RB OT V L
+Bullet  SR CR S FR FG FB OR OG OB OT V L
     shape radius SR int
     collision radius CR int
     speed S float
