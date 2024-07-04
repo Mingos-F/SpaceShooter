@@ -7,6 +7,17 @@
 #include <imgui.h>
 #include <imgui-SFML.h>
 
+struct WindowConfig
+{
+    int W, H, FR, FS;
+};
+
+struct FontConfig
+{
+    std::string P;
+    int S, R, G, B;
+};
+
 struct PlayerConfig
 {
     int SR, CR, FR, FG, FB, OR, OG, OB, OT, V;
@@ -31,6 +42,8 @@ class Game
     EntityManager m_entities;  // vector of entities to maintain
     sf::Font m_font;
     sf::Text m_text; // the score text
+    WindowConfig m_windowConfig;
+    FontConfig m_fontConfig;
     PlayerConfig m_playerConfig;
     EnemyConfig m_enemyConfig;
     BulletConfig m_bulletConfig;
