@@ -1,12 +1,36 @@
 #include "EntityManager.h"
 
+#include <iostream>
+
 EntityManager::EntityManager()
 {
 }
 
 void EntityManager::update()
 {
-    // TODO add entities from m_entitiesToAdd to the proper locations (vector of all entities and to the map)
+    // add entities from m_entitiesToAdd to the proper locations (vector of all entities and to the map)
+    for (auto &entity : m_entitiesToAdd)
+    {
+        m_entities.push_back(entity);
+
+        // find returns an iterator either to the element with tag "tag" or to the end of map if tag not found
+        auto it = m_entitiesMap.find(entity->tag());
+
+        // tag found?
+        if (it != m_entitiesMap.cend())
+        {
+            // insert in the vector of entities
+            it->second.push_back(entity);
+        }
+        else
+        {
+            // create new key value pair
+            m_entitiesMap[entity->tag()] = EntityVec{entity};
+        }
+    }
+
+    // clear the entities to add vector
+    m_entitiesToAdd.clear();
 
     // remove dead entities from the vector off all entities
     removeDeadEntities(m_entities);
@@ -20,7 +44,11 @@ void EntityManager::update()
 
 void EntityManager::removeDeadEntities(EntityVec &vec)
 {
-    // TODO remove all dead entities from the input vector
+    // remove all dead entities from the input vector
+
+    vec.erase(std::remove_if(vec.begin(), vec.end(), [](const std::shared_ptr<Entity> &entity)
+                             { return !entity->isActive(); }),
+              vec.end());
 }
 
 std::shared_ptr<Entity> EntityManager::addEntity(const std::string &tag)
@@ -37,8 +65,16 @@ const EntityVec &EntityManager::getEntities()
 
 const EntityVec &EntityManager::getEntities(const std::string &tag)
 {
-    // TODO this is incorrect return the correct vector from the map
-    return m_entities;
+    auto it = m_entitiesMap.find(tag);
+
+    // tag found not found
+    if (it == m_entitiesMap.cend())
+    {
+        std::cerr << "Tag not found, (EntityManager get entities)" << std::endl;
+        exit(-1);
+    }
+
+    return m_entitiesMap.at(tag);
 }
 
 const EntityMap &EntityManager::getEntityMap()
