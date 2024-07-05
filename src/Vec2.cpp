@@ -73,12 +73,13 @@ void Vec2::operator*=(const float val)
   this->y *val;
 }
 
-float Vec2::dist(const Vec2 &rhs) const
+Vec2 Vec2::unitVector(const Vec2 &rhs) const
 {
   float dx = rhs.x - x;
   float dy = rhs.y - y;
+  float magnitude = sqrtf((dx * dx) + (dy * dy));
 
-  return sqrtf((dx * dx) + (dy * dy));
+  return Vec2(dx / magnitude, dy / magnitude);
 }
 
 void Vec2::print()
