@@ -26,7 +26,13 @@ FetchContent_MakeAvailable(ImGui-SFML)
 # Find all .cpp files in the src directory (this actually works)
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
-add_executable(main ${SOURCES})
+# Define the resource files for Windows
+if(WIN32)
+    set(RESOURCE_FILES "icon.rc")
+endif()
+
+# Add the executable with the resource files (if any)
+add_executable(main ${SOURCES} ${RESOURCE_FILES})
 target_link_libraries(main PRIVATE sfml-graphics ImGui-SFML::ImGui-SFML)
 target_compile_features(main PRIVATE cxx_std_17)
 
