@@ -159,6 +159,7 @@ void Game::SpawnBullets(std::shared_ptr<Entity> entity, const Vec2 &target)
 
 void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity)
 {
+    // TODO
 }
 
 void Game::sMovement()
@@ -196,6 +197,8 @@ void Game::sMovement()
 
 void Game::sLifespan()
 {
+    // TODO
+
     // for all entities
     //      if entity has no lifespan component skip it
     //      if entity has > 0 lifespan , subtract 1
@@ -207,6 +210,7 @@ void Game::sLifespan()
 
 void Game::sCollision()
 {
+    // TODO
 }
 
 void Game::sEnemySpawner()
@@ -219,6 +223,7 @@ void Game::sEnemySpawner()
 
 void Game::sGUI()
 {
+    // TODO
     ImGui::Begin("SpaceShooter");
     ImGui::Text("Stuff goes here");
     ImGui::End();
