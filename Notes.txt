@@ -90,5 +90,6 @@ Bullet  SR CR S FR FG FB OR OG OB OT V L
     speed S float
     fill color FR FG FB int
     outline color OR OG OB int
+    outline tightness OT int
     shape vertices V int
     lifespan L int
