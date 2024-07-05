@@ -2,6 +2,10 @@
 
 #include <iostream>
 #include <fstream>
+#include <random>
+
+float generate_random_float(float lower_bound, float upper_bound);
+int generate_random_int(int lower_bound, int upper_bound);
 
 Game::Game(const std::string &config)
 {
@@ -10,7 +14,7 @@ Game::Game(const std::string &config)
 
 void Game::init(const std::string &path)
 {
-    // TODO read the config file here
+    // read the config file here
 
     std::fstream fin(path);
 
@@ -108,20 +112,15 @@ void Game::setPaused(bool paused)
     // TODO
 }
 
-// respawn the player in the middle of the screen
+
 void Game::spawnPlayer()
 {
     // create the player with the values from the config
-
     // create every entity by calling EntityManager.addEntity(tag)
     auto entity = m_entities.addEntity("player");
-
     entity->cTransform = std::make_shared<CTransform>(Vec2(m_window.getSize().x / 2, m_window.getSize().y / 2), Vec2(m_playerConfig.S, m_playerConfig.S), 0.0f);
-
     entity->cShape = std::make_shared<CShape>(m_playerConfig.CR, m_playerConfig.V, sf::Color(m_playerConfig.FR, m_playerConfig.FG, m_playerConfig.FB), sf::Color(m_playerConfig.OR, m_playerConfig.OG, m_playerConfig.OB), m_playerConfig.OT);
-
     entity->cCollision = std::make_shared<CCollision>(m_playerConfig.CR);
-
     entity->cInput = std::make_shared<CInput>();
 
     // since we want this entity to be our player set the games player var to this entity
@@ -130,11 +129,15 @@ void Game::spawnPlayer()
 
 void Game::spawnEnemy()
 {
-    // TODO make sure the enemy is spawned with the config values and withing bounds of the widow
+    // the enemy is spawned with the config values and withing bounds of the window
+
+    int numberVerticies = generate_random_int(m_enemyConfig.VMIN, m_enemyConfig.VMAX);
 
     auto entity = m_entities.addEntity("enemy");
-    entity->cTransform = std::make_shared<CTransform>(Vec2(200.0f, 200.0f), Vec2(1.0f, 1.0f), 0.0f);
-    entity->cShape = std::make_shared<CShape>(32.0f, 8, sf::Color(10, 10, 10), sf::Color(255, 0, 0), 4.0f);
+    entity->cTransform = std::make_shared<CTransform>(Vec2(generate_random_float(m_enemyConfig.SR, m_window.getSize().x - m_enemyConfig.SR), generate_random_float(m_enemyConfig.SR, m_window.getSize().y - m_enemyConfig.SR)), Vec2(generate_random_float(m_enemyConfig.SMIN, m_enemyConfig.SMAX), generate_random_float(m_enemyConfig.SMIN, m_enemyConfig.SMAX)), 0.0f);
+    entity->cShape = std::make_shared<CShape>(m_enemyConfig.SR, numberVerticies, sf::Color(generate_random_int(0,255), generate_random_int(0,255), generate_random_int(0,255)), sf::Color(m_enemyConfig.OR, m_enemyConfig.OG, m_enemyConfig.OB), m_enemyConfig.OT);
+    entity->cCollision = std::make_shared<CCollision>(m_enemyConfig.CR);
+    entity->cScore = std::make_shared<CScore>(numberVerticies*100);
 
     // record when most recent enemy was spawned
     m_lastEnemySpawnTime = m_currentFrame;
@@ -181,7 +184,7 @@ void Game::sCollision()
 
 void Game::sEnemySpawner()
 {
-    if (m_currentFrame == 0 || m_currentFrame > m_lastEnemySpawnTime + 20)
+    if (m_currentFrame == 0 || m_currentFrame > m_lastEnemySpawnTime + m_enemyConfig.SI)
     {
         spawnEnemy();
     }
@@ -205,18 +208,9 @@ void Game::sRender()
         // entity->cShape->circle.setPosition(entity->cTransform->pos.x, entity->cTransform->pos.y);
         entity->cTransform->angle += 1.0f;
         entity->cShape->circle.setRotation(entity->cTransform->angle);
+        entity->cShape->circle.setPosition(entity->cTransform->pos.x, entity->cTransform->pos.y);
         m_window.draw(entity->cShape->circle);
     }
-
-    // set the position of the shape based on the entities transform pos
-    m_player->cShape->circle.setPosition(m_player->cTransform->pos.x, m_player->cTransform->pos.y);
-
-    // set rotation of the shape based on the entities angle
-    m_player->cTransform->angle += 1.0f;
-    m_player->cShape->circle.setRotation(m_player->cTransform->angle);
-
-    // draw the entities shape
-    m_window.draw(m_player->cShape->circle);
 
     // draw the ui last
     ImGui::SFML::Render(m_window);
@@ -296,4 +290,31 @@ void Game::sUserInput()
             }
         }
     }
+}
+
+
+float generate_random_float(float lower_bound, float upper_bound) {
+
+    // Seed with a real random value, if available
+    static std::random_device rd;
+    // Use a static generator to maintain state across function calls
+    static std::mt19937 gen(rd());
+    // Define the distribution with the specified range
+    std::uniform_real_distribution<float> dis(lower_bound, upper_bound);
+
+    // Generate and return a random float number in the range [lower_bound, upper_bound]
+    return dis(gen);
+}
+
+int generate_random_int(int lower_bound, int upper_bound) {
+
+    // Seed with a real random value, if available
+    static std::random_device rd;
+    // Use a static generator to maintain state across function calls
+    static std::mt19937 gen(rd());
+    // Define the distribution with the specified range
+    std::uniform_real_distribution<> dis(lower_bound, upper_bound);
+
+    // Generate and return a random float number in the range [lower_bound, upper_bound]
+    return dis(gen);
 }
