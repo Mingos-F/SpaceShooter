@@ -3,9 +3,9 @@
 #include <iostream>
 #include <fstream>
 #include <random>
+#include <math.h>
 
-float generate_random_float(float lower_bound, float upper_bound);
-int generate_random_int(int lower_bound, int upper_bound);
+float generateRandom(float lower_bound, float upper_bound);
 
 Game::Game(const std::string &config)
 {
@@ -61,6 +61,7 @@ void Game::init(const std::string &path)
     }
 
     m_window.setFramerateLimit(m_windowConfig.FR);
+    m_window.setVerticalSyncEnabled(true);
 
     // set up the font
     if (!m_font.loadFromFile(m_fontConfig.P))
@@ -112,7 +113,6 @@ void Game::setPaused(bool paused)
     // TODO
 }
 
-
 void Game::spawnPlayer()
 {
     // create the player with the values from the config
@@ -131,13 +131,13 @@ void Game::spawnEnemy()
 {
     // the enemy is spawned with the config values and withing bounds of the window
 
-    int numberVerticies = generate_random_int(m_enemyConfig.VMIN, m_enemyConfig.VMAX);
+    int numberVertices = std::floor(generateRandom(m_enemyConfig.VMIN, m_enemyConfig.VMAX));
 
     auto entity = m_entities.addEntity("enemy");
-    entity->cTransform = std::make_shared<CTransform>(Vec2(generate_random_float(m_enemyConfig.SR, m_window.getSize().x - m_enemyConfig.SR), generate_random_float(m_enemyConfig.SR, m_window.getSize().y - m_enemyConfig.SR)), Vec2(generate_random_float(m_enemyConfig.SMIN, m_enemyConfig.SMAX), generate_random_float(m_enemyConfig.SMIN, m_enemyConfig.SMAX)), 0.0f);
-    entity->cShape = std::make_shared<CShape>(m_enemyConfig.SR, numberVerticies, sf::Color(generate_random_int(0,255), generate_random_int(0,255), generate_random_int(0,255)), sf::Color(m_enemyConfig.OR, m_enemyConfig.OG, m_enemyConfig.OB), m_enemyConfig.OT);
+    entity->cTransform = std::make_shared<CTransform>(Vec2(generateRandom(m_enemyConfig.SR, m_window.getSize().x - m_enemyConfig.SR), generateRandom(m_enemyConfig.SR, m_window.getSize().y - m_enemyConfig.SR)), Vec2(generateRandom(m_enemyConfig.SMIN, m_enemyConfig.SMAX), generateRandom(m_enemyConfig.SMIN, m_enemyConfig.SMAX)), 0.0f);
+    entity->cShape = std::make_shared<CShape>(m_enemyConfig.SR, numberVertices, sf::Color(std::floor(generateRandom(0, 255)), std::floor(generateRandom(0, 255)), std::floor(generateRandom(0, 255))), sf::Color(m_enemyConfig.OR, m_enemyConfig.OG, m_enemyConfig.OB), m_enemyConfig.OT);
     entity->cCollision = std::make_shared<CCollision>(m_enemyConfig.CR);
-    entity->cScore = std::make_shared<CScore>(numberVerticies*100);
+    entity->cScore = std::make_shared<CScore>(numberVertices * 100);
 
     // record when most recent enemy was spawned
     m_lastEnemySpawnTime = m_currentFrame;
@@ -148,9 +148,13 @@ void Game::spawnSmallEnemies(std::shared_ptr<Entity> e)
     // TODO spawn small enemies at the location of the inout enemy
 }
 
-// spawns a bullet from a given entity to a target location
 void Game::SpawnBullets(std::shared_ptr<Entity> entity, const Vec2 &target)
 {
+    auto bullet = m_entities.addEntity("bullet");
+    bullet->cTransform = std::make_shared<CTransform>(entity->cTransform->pos, (entity->cTransform->pos.unitVector(target) * m_bulletConfig.S), 0.0f);
+    bullet->cShape = std::make_shared<CShape>(m_bulletConfig.SR, m_bulletConfig.V, sf::Color(m_bulletConfig.FR, m_bulletConfig.FG, m_bulletConfig.FB), sf::Color(m_bulletConfig.OR, m_bulletConfig.OG, m_bulletConfig.OB), m_bulletConfig.OT);
+    bullet->cCollision = std::make_shared<CCollision>(m_bulletConfig.CR);
+    bullet->cLifespan = std::make_shared<CLifespan>(m_bulletConfig.L);
 }
 
 void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity)
@@ -159,12 +163,35 @@ void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity)
 
 void Game::sMovement()
 {
-    // TODO implement all entity movement here
-    // read m_player->cInput to check if player is moving
 
-    // sample movement
-    m_player->cTransform->pos.x += m_player->cTransform->velocity.x;
-    m_player->cTransform->pos.y += m_player->cTransform->velocity.y;
+    for (auto &entity : m_entities.getEntities())
+    {
+        if (entity->cInput)
+        {
+            if (m_player->cInput->up && (m_player->cTransform->pos.y - m_player->cShape->circle.getRadius()) > 5.0f)
+                m_player->cTransform->pos.y -= m_player->cTransform->velocity.y;
+
+            if (m_player->cInput->down && (m_player->cTransform->pos.y + m_player->cShape->circle.getRadius()) < (m_window.getSize().y - 5.0f))
+                m_player->cTransform->pos.y += m_player->cTransform->velocity.y;
+
+            if (m_player->cInput->left && (m_player->cTransform->pos.x - m_player->cShape->circle.getRadius()) > 5.0f)
+                m_player->cTransform->pos.x -= m_player->cTransform->velocity.x;
+
+            if (m_player->cInput->right && (m_player->cTransform->pos.x + m_player->cShape->circle.getRadius()) < (m_window.getSize().x - 5.0f))
+                m_player->cTransform->pos.x += m_player->cTransform->velocity.x;
+
+            continue;
+        }
+
+        if ((entity->cTransform->pos.x - entity->cShape->circle.getRadius()) < 5.0f || (entity->cTransform->pos.x + entity->cShape->circle.getRadius()) > (m_window.getSize().x - 5.0f))
+            entity->cTransform->velocity.x *= -1;
+
+        if ((entity->cTransform->pos.y - entity->cShape->circle.getRadius()) < 5.0f || (entity->cTransform->pos.y + entity->cShape->circle.getRadius()) > (m_window.getSize().y - 5.0f))
+            entity->cTransform->velocity.y *= -1;
+
+        entity->cTransform->pos.x += entity->cTransform->velocity.x;
+        entity->cTransform->pos.y += entity->cTransform->velocity.y;
+    }
 }
 
 void Game::sLifespan()
@@ -199,7 +226,7 @@ void Game::sGUI()
 
 void Game::sRender()
 {
-    // TODO change the code to draw all of  the entities
+    // change the code to draw all of  the entities
 
     m_window.clear();
 
@@ -220,9 +247,6 @@ void Game::sRender()
 
 void Game::sUserInput()
 {
-    // TODO handle user input
-    // do ont implement the logic of movement here
-
     sf::Event event;
     while (m_window.pollEvent(event))
     {
@@ -241,13 +265,24 @@ void Game::sUserInput()
             switch (event.key.code)
             {
             case sf::Keyboard::W:
-                std::cout << "W key pressed" << std::endl;
+                m_player->cInput->up = true;
+                break;
+
+            case sf::Keyboard::S:
+                m_player->cInput->down = true;
+                break;
+
+            case sf::Keyboard::A:
+                m_player->cInput->left = true;
+                break;
+
+            case sf::Keyboard::D:
+                m_player->cInput->right = true;
                 break;
 
             // exit game
             case sf::Keyboard::Escape:
-                m_window.close();
-                exit(0);
+                m_running = false;
                 break;
 
             default:
@@ -261,7 +296,19 @@ void Game::sUserInput()
             switch (event.key.code)
             {
             case sf::Keyboard::W:
-                std::cout << "W key released" << std::endl;
+                m_player->cInput->up = false;
+                break;
+
+            case sf::Keyboard::S:
+                m_player->cInput->down = false;
+                break;
+
+            case sf::Keyboard::A:
+                m_player->cInput->left = false;
+                break;
+
+            case sf::Keyboard::D:
+                m_player->cInput->right = false;
                 break;
 
             default:
@@ -281,19 +328,19 @@ void Game::sUserInput()
 
             if (event.mouseButton.button == sf::Mouse::Left)
             {
-                std::cout << "left mouse clicked at (" << event.mouseButton.x << "," << event.mouseButton.y << ")" << std::endl;
+                SpawnBullets(m_player, Vec2(event.mouseButton.x, event.mouseButton.y));
             }
 
             if (event.mouseButton.button == sf::Mouse::Right)
             {
-                std::cout << "right mouse clicked at (" << event.mouseButton.x << "," << event.mouseButton.y << ")" << std::endl;
+                spawnSpecialWeapon(m_player);
             }
         }
     }
 }
 
-
-float generate_random_float(float lower_bound, float upper_bound) {
+float generateRandom(float lower_bound, float upper_bound)
+{
 
     // Seed with a real random value, if available
     static std::random_device rd;
@@ -301,19 +348,6 @@ float generate_random_float(float lower_bound, float upper_bound) {
     static std::mt19937 gen(rd());
     // Define the distribution with the specified range
     std::uniform_real_distribution<float> dis(lower_bound, upper_bound);
-
-    // Generate and return a random float number in the range [lower_bound, upper_bound]
-    return dis(gen);
-}
-
-int generate_random_int(int lower_bound, int upper_bound) {
-
-    // Seed with a real random value, if available
-    static std::random_device rd;
-    // Use a static generator to maintain state across function calls
-    static std::mt19937 gen(rd());
-    // Define the distribution with the specified range
-    std::uniform_real_distribution<> dis(lower_bound, upper_bound);
 
     // Generate and return a random float number in the range [lower_bound, upper_bound]
     return dis(gen);
