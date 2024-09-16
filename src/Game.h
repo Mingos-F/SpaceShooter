@@ -64,7 +64,7 @@ public:
     void spawnPlayer();
     void spawnEnemy();
     void spawnSmallEnemies(std::shared_ptr<Entity> e);
-    void SpawnBullets(std::shared_ptr<Entity> entity, const Vec2 &target);
+    void spawnBullets(std::shared_ptr<Entity> entity, const Vec2 &target);
     void spawnSpecialWeapon(std::shared_ptr<Entity> entity);
     void sMovement();
     void sLifespan();

@@ -5,6 +5,8 @@
 #include <random>
 #include <math.h>
 
+const float pi = 3.14159265359f;
+
 float generateRandom(float lower_bound, float upper_bound);
 
 Game::Game(const std::string &config)
@@ -95,6 +97,7 @@ void Game::run()
         // required update call to imgui
         ImGui::SFML::Update(m_window, m_deltaClock.restart());
 
+        sLifespan();
         sEnemySpawner();
         sMovement();
         sCollision();
@@ -145,10 +148,24 @@ void Game::spawnEnemy()
 
 void Game::spawnSmallEnemies(std::shared_ptr<Entity> e)
 {
-    // TODO spawn small enemies at the location of the inout enemy
+    for (size_t i = 0; i < e->cShape->circle.getPointCount(); i++)
+    {
+        auto entity = m_entities.addEntity("smallenemy");
+
+        // the unite used for angles in c++ math library is radian so we multiply by pi/180 to convert degrees to radians
+        float angle = ((360 / e->cShape->circle.getPointCount()) * i) * (pi / 180);
+        float speed = e->cTransform->velocity.magnitude(Vec2(cos(angle), sin(angle)));
+
+        entity->cTransform = std::make_shared<CTransform>(e->cTransform->pos, Vec2(cos(angle) * speed, sin(angle) * speed), 0);
+        entity->cShape = std::make_shared<CShape>((e->cShape->circle.getRadius() / 2), e->cShape->circle.getPointCount(), e->cShape->circle.getFillColor(),
+                                                  e->cShape->circle.getOutlineColor(), e->cShape->circle.getOutlineThickness());
+        entity->cCollision = std::make_shared<CCollision>((e->cShape->circle.getRadius() / 2));
+        entity->cScore = std::make_shared<CScore>(e->cScore->score * 2);
+        entity->cLifespan = std::make_shared<CLifespan>(m_enemyConfig.L);
+    }
 }
 
-void Game::SpawnBullets(std::shared_ptr<Entity> entity, const Vec2 &target)
+void Game::spawnBullets(std::shared_ptr<Entity> entity, const Vec2 &target)
 {
     auto bullet = m_entities.addEntity("bullet");
     bullet->cTransform = std::make_shared<CTransform>(entity->cTransform->pos, (entity->cTransform->pos.unitVector(target) * m_bulletConfig.S), 0.0f);
@@ -197,8 +214,6 @@ void Game::sMovement()
 
 void Game::sLifespan()
 {
-    // TODO
-
     // for all entities
     //      if entity has no lifespan component skip it
     //      if entity has > 0 lifespan , subtract 1
@@ -206,11 +221,79 @@ void Game::sLifespan()
     //          scale alpha chanel
     //      if it has lifespan and its time is up
     //          destroy entity
+
+    for (auto &entity : m_entities.getEntities())
+    {
+        if (!entity->cLifespan)
+        {
+            continue;
+        }
+
+        if (entity->cLifespan->remaining > 0)
+        {
+            entity->cLifespan->remaining -= 1;
+        }
+
+        if (entity->cLifespan->remaining > 0 && entity->isActive())
+        {
+            int alpha = entity->cLifespan->remaining * 255 / entity->cLifespan->total;
+            entity->cShape->circle.setFillColor(sf::Color(entity->cShape->circle.getFillColor().r, entity->cShape->circle.getFillColor().g,
+                                                          entity->cShape->circle.getFillColor().b, alpha));
+            entity->cShape->circle.setOutlineColor(sf::Color(entity->cShape->circle.getOutlineColor().r, entity->cShape->circle.getOutlineColor().g,
+                                                             entity->cShape->circle.getOutlineColor().b, alpha));
+        }
+
+        if (entity->cLifespan->remaining <= 0)
+        {
+            entity->destroy();
+        }
+    }
 }
 
 void Game::sCollision()
 {
-    // TODO
+    // check all the enemies
+    for (auto &enemy : m_entities.getEntities("enemy"))
+    {
+        // check if it collides with the player
+        if ((enemy->cTransform->pos.magnitude(m_player->cTransform->pos)) < enemy->cCollision->radius * 2)
+        {
+            std::cout << "collision player" << std::endl;
+        }
+
+        // check if it collides with the bullet
+        for (auto &bullet : m_entities.getEntities("bullet"))
+        {
+            if ((enemy->cTransform->pos.magnitude(bullet->cTransform->pos)) < bullet->cCollision->radius + enemy->cCollision->radius)
+            {
+                m_score += enemy->cScore->score;
+                enemy->destroy();
+                bullet->destroy();
+                spawnSmallEnemies(enemy);
+            }
+        }
+    }
+
+    // check all the enemies
+    for (auto &enemy : m_entities.getEntities("smallenemy"))
+    {
+        // check if it collides with the player
+        if ((enemy->cTransform->pos.magnitude(m_player->cTransform->pos)) < enemy->cCollision->radius * 2)
+        {
+            std::cout << "collision player" << std::endl;
+        }
+
+        // check if it collides with the bullet
+        for (auto &bullet : m_entities.getEntities("bullet"))
+        {
+            if ((enemy->cTransform->pos.magnitude(bullet->cTransform->pos)) < bullet->cCollision->radius + enemy->cCollision->radius)
+            {
+                m_score += enemy->cScore->score;
+                enemy->destroy();
+                bullet->destroy();
+            }
+        }
+    }
 }
 
 void Game::sEnemySpawner()
@@ -333,7 +416,7 @@ void Game::sUserInput()
 
             if (event.mouseButton.button == sf::Mouse::Left)
             {
-                SpawnBullets(m_player, Vec2(event.mouseButton.x, event.mouseButton.y));
+                spawnBullets(m_player, Vec2(event.mouseButton.x, event.mouseButton.y));
             }
 
             if (event.mouseButton.button == sf::Mouse::Right)
