@@ -86,16 +86,22 @@ void Game::init(const std::string &path)
 void Game::run()
 {
 
-    // TODO add pause functionality in here
-    //  some systems should run while paused rendering
-
     while (m_running)
     {
+
         // update the entity manager
         m_entities.update();
 
         // required update call to imgui
         ImGui::SFML::Update(m_window, m_deltaClock.restart());
+
+        if (m_paused)
+        {
+            sUserInput();
+            sGUI();
+            sRender();
+            continue;
+        }
 
         sLifespan();
         sEnemySpawner();
@@ -113,7 +119,7 @@ void Game::run()
 
 void Game::setPaused(bool paused)
 {
-    // TODO
+    m_paused = paused;
 }
 
 void Game::spawnPlayer()
@@ -368,6 +374,10 @@ void Game::sUserInput()
                 m_player->cInput->right = true;
                 break;
 
+            case sf::Keyboard::P:
+                setPaused(!m_paused);
+                break;
+
             // exit game
             case sf::Keyboard::Escape:
                 m_running = false;
@@ -414,12 +424,12 @@ void Game::sUserInput()
                 continue;
             }
 
-            if (event.mouseButton.button == sf::Mouse::Left)
+            if (event.mouseButton.button == sf::Mouse::Left && !m_paused)
             {
                 spawnBullets(m_player, Vec2(event.mouseButton.x, event.mouseButton.y));
             }
 
-            if (event.mouseButton.button == sf::Mouse::Right)
+            if (event.mouseButton.button == sf::Mouse::Right && !m_paused)
             {
                 spawnSpecialWeapon(m_player);
             }
