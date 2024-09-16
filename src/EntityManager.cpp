@@ -4,6 +4,9 @@
 
 EntityManager::EntityManager()
 {
+    m_entitiesMap["enemy"] = EntityVec{};
+    m_entitiesMap["smallenemy"] = EntityVec{};
+    m_entitiesMap["bullet"] = EntityVec{};
 }
 
 void EntityManager::update()
