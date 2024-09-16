@@ -80,6 +80,12 @@ void Game::init(const std::string &path)
         exit(-1);
     }
 
+    m_text.setFont(m_font);
+    m_text.setCharacterSize(m_fontConfig.S);
+    m_text.setFillColor(sf::Color(m_fontConfig.R, m_fontConfig.G, m_fontConfig.B));
+    m_text.setPosition(10, 10);
+    m_text.setString("Score: " + std::to_string(m_score));
+
     spawnPlayer();
 }
 
@@ -273,6 +279,7 @@ void Game::sCollision()
             if ((enemy->cTransform->pos.magnitude(bullet->cTransform->pos)) < bullet->cCollision->radius + enemy->cCollision->radius)
             {
                 m_score += enemy->cScore->score;
+                m_text.setString("Score: " + std::to_string(m_score));
                 enemy->destroy();
                 bullet->destroy();
                 spawnSmallEnemies(enemy);
@@ -295,6 +302,7 @@ void Game::sCollision()
             if ((enemy->cTransform->pos.magnitude(bullet->cTransform->pos)) < bullet->cCollision->radius + enemy->cCollision->radius)
             {
                 m_score += enemy->cScore->score;
+                m_text.setString("Score: " + std::to_string(m_score));
                 enemy->destroy();
                 bullet->destroy();
             }
@@ -335,6 +343,8 @@ void Game::sRender()
 
     // draw the ui last
     ImGui::SFML::Render(m_window);
+
+    m_window.draw(m_text);
 
     m_window.display();
 }
