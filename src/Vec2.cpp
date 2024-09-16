@@ -82,6 +82,15 @@ Vec2 Vec2::unitVector(const Vec2 &rhs) const
   return Vec2(dx / magnitude, dy / magnitude);
 }
 
+float Vec2::magnitude(const Vec2 &rhs) const
+{
+  float dx = rhs.x - x;
+  float dy = rhs.y - y;
+  float magnitude = sqrtf((dx * dx) + (dy * dy));
+
+  return magnitude;
+}
+
 void Vec2::print()
 {
   std::cout << "Coordinates: (" << x << "," << y << ")" << std::endl;

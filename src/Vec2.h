@@ -22,6 +22,7 @@ public:
     void operator*=(const float val);
 
     Vec2 unitVector(const Vec2 &rhs) const;
+    float magnitude(const Vec2 &rhs) const;
 
     void print();
 };
